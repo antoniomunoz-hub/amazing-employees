@@ -29,8 +29,8 @@
                 <td><a href="{{ path('default_show', { id: loop.index0 }) }}">{{ person.email }}</a></td>
                 <td>{{ person.city }}</td>
                 <td>
-                    <ul><a href="">Ver en formato Html</a></ul>
-                    <ul><a href="">Ver en formato Json</a></ul>
+                    <ul><a href=>Ver en formato Html</a></ul>
+                    <li><a href="{{ path('default_index_json', { _format: 'json',  id: loop.index0 }) }}">Ver en formato JSON</a></li>
                 </td>
             </tr>
             {% endfor %}

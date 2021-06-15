@@ -97,7 +97,8 @@ class DefaultController extends AbstractController
     }
     
       /**
-     * @Route("/redirect-to-home", name="default_redirect_to_home")
+     * @Route("/redirect-to-home", 
+     * name="default_redirect_to_home")
      */
     public function redirectToHome(): Response {
         return new RedirectResponse('/');
@@ -108,6 +109,26 @@ class DefaultController extends AbstractController
 
         //Reirigir una tura utilizando su nombre
         //Return $this->redirectRoute('default_show', ['id'=>1]);    
+    }
+
+        /**
+     * @Route(
+     *      "/default.{_format}",
+     *      name="default_index_json",
+     *      requirements = {
+     *          "_format": "json"
+     *      }
+     * )
+     * 
+     * El comando:
+     * symfony console router:match /default.json
+     * buscará la acción coincidente con la ruta indicada
+     * y mostrará la información asociada.
+     */
+    public function indexJsonRequest(Request $request): JsonResponse {
+        $data = $request->query->has('id') ? self::PEOPLE[$request->query->get('id')] : self::PEOPLE;
+
+        return $this->json($data);
     }
 }
 
