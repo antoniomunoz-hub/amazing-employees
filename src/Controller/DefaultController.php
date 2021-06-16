@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 namespace App\Controller;
-
+use App\Entity\Employee;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -16,10 +16,7 @@ use Symfony\Component\HttpFoundation\Request;
 class DefaultController extends AbstractController
 {
     const PEOPLE = [
-        ['name' => 'Carlos', 'email' => 'carlos@correo.com', 'age' => 30, 'city' => 'Benalmádena'],
-        ['name' => 'Carmen', 'email' => 'carmen@correo.com', 'age' => 25, 'city' => 'Fuengirola'],
-        ['name' => 'Carmelo', 'email' => 'carmelo@correo.com', 'age' => 35, 'city' => 'Torremolinos'],
-        ['name' => 'Carolina', 'email' => 'carolina@correo.com', 'age' => 38, 'city' => 'Málaga'],        
+        
     ];
     
     
@@ -49,9 +46,14 @@ class DefaultController extends AbstractController
 
         //symfony
 
-        $name ='Antoñin';
-        return $this->render('default/index.html.twig',[
-        'people' => self::PEOPLE]);
+
+
+        $people = $this->getDoctrine()->getRepository(Employee::class)->findAll(); // Employee::class = App\Entity\Employee
+
+        return $this->render('default/index.html.twig', [
+           'people' => $people
+        ]);
+
     }
 
     /**
@@ -72,7 +74,7 @@ class DefaultController extends AbstractController
      * )
      */
     public function indexJson(): JsonResponse {
-        return $this->json(self::PEOPLE);
+        return $this->json([]);
     }
     /**
      * @Route("/adios", name="default_adios")
@@ -91,7 +93,7 @@ class DefaultController extends AbstractController
      public function show(int $id): Response{
         return $this->render('default/show.html.twig', [
             'id'=> $id,
-            'person' => self::PEOPLE[$id]
+            'person' => []
         ]);
 
     }
