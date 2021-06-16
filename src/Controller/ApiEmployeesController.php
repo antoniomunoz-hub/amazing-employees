@@ -1,10 +1,13 @@
 <?php
 
 namespace App\Controller;
-
+use App\Repository\EmployeeRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\BrowserKit\Request;
+use Symfony\Component\HttpFoundation\Request as HttpFoundationRequest;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+
 
 /**
  * @Route("/api/amazing-employees", name="api_employees_")
@@ -19,12 +22,19 @@ use Symfony\Component\Routing\Annotation\Route;
      * )
      */
     
-     public function index(): Response
+    public function index(Request $request, EmployeeRepository $employeeRepository): Response
     {
-        return $this->json([
-            'method' => 'CGET',
-            'description' => 'Devuelve el listado del recurso empleados.',
-        ]);
+        if($request->query->has('term')) {
+            $people = $employeeRepository->findByTerm($request->query->get('term'));
+
+ 
+
+            return $this->json($people);
+        }
+
+ 
+
+        return $this->json($employeeRepository->findAll());
     }
 
     /**
@@ -38,13 +48,16 @@ use Symfony\Component\Routing\Annotation\Route;
      * )
      */
     
-     public function show(int $id): Response
+    public function show(int $id, EmployeeRepository $employeeRepository): Response
     {
-        return $this->json([
-            'method' => 'GET',
-            'description' => 'Devuelve un solo recurso empleado con id: '.$id.'.'
-        ]);
+        $data = $employeeRepository->find($id);
+
+        dump($id);
+        dump($data);
+
+        return $this->json($data);
     }
+
 
     /**
      * @Route(
