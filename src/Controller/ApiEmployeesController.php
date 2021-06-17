@@ -1,16 +1,22 @@
 <?php
 
 namespace App\Controller;
+use App\Entity\Employee;
 use App\Repository\EmployeeRepository;
+use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\BrowserKit\Request;
 use Symfony\Component\HttpFoundation\Request as HttpFoundationRequest;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 
 /**
  * @Route("/api/amazing-employees", name="api_employees_")
+ * @UniqueEntity("email")
  */
  class ApiEmployeesController extends AbstractController
 {
@@ -26,8 +32,6 @@ use Symfony\Component\Routing\Annotation\Route;
     {
         if($request->query->has('term')) {
             $people = $employeeRepository->findByTerm($request->query->get('term'));
-
- 
 
             return $this->json($people);
         }
@@ -67,13 +71,62 @@ use Symfony\Component\Routing\Annotation\Route;
      * )
      */
     
-     public function add(): Response {
-        return  $this->json([
-            'method' => 'POST',
-            'description' => 'Crea un recurso empleado.',
+    public function add(
+        Request $request,
+        EntityManagerInterface $entityManager, 
+        ValidatorInterface $validator) : Response {
+        $data = $request->request;
+        
 
-        ]);
+        $employee = new Employee();
+
+        $employee->setName($data->get('name'));
+        $employee->setEmail($data->get('email'));
+        $employee->setAge($data->get('age'));
+        $employee->setCity($data->get('City'));
+        $employee->setPhone($data->get('phone'));
+
+        $errors = $validator->validate($employee);
+
+        if (count($errors) > 0){
+            $dataerrors = [];
+            
+            foreach($errors as $error){
+                $dataErrors[] = $error->getMessage();
+
+            }
+
+            return $this->json([
+                'status'=>'error',
+                'data'=> [
+                    'errors'=> $dataErrors
+                ],
+                Response::HTTP_BAD_REQUEST
+
+            ]);
+        }
+
+        $entityManager->persist($employee);
+
+        // hasta aqui employee no tiene id
+        $entityManager->flush();
+
+        dump($employee);
+
+        return  $this->json(
+            $employee,
+            Response::HTTP_CREATED,
+            [
+                'Location'=> $this->generateUrl(
+                    'api_employees_get',
+                    [
+                        'id'=> $employee->getId()
+                    ]
+                )
+            ]
+        );
     }
+
     
     
     /**
@@ -87,12 +140,25 @@ use Symfony\Component\Routing\Annotation\Route;
      * )
      */
     
-     public function update(int $id): Response
+     public function update(
+         Employee $employee,
+         EntityManagerInterface $entityManager,
+         Request $request
+        ): Response
     {
-        return $this->json([
-            'method' => 'PUT',
-            'description' => 'Actualiza un recurso empleado con id: '.$id.'.',
-        ]);
+        $data = $request->request;
+        
+        $employee->setName($data->get('name'));
+        $employee->setEmail($data->get('email'));
+        $employee->setAge($data->get('age'));
+        $employee->setCity($data->get('City'));
+        $employee->setPhone($data->get('phone'));
+        
+        $entityManager->flush();
+
+        return $this->json(
+            null, Response::HTTP_NO_CONTENT
+        );
     }
 
     /**
@@ -106,12 +172,18 @@ use Symfony\Component\Routing\Annotation\Route;
      * )
      */
     
-     public function remove(int $id): Response
+     public function remove(
+         Employee $employee,
+         EntityManagerInterface $entityManager
+         ): Response
     {
-        return $this->json([
-            'method' => 'DELETE',
-            'description' => 'Elimina un recurso empleado con id: '.$id.'.',
-        ]);
+        //remove() prepara el sistema pero NO ejecuta la sentencia
+
+        $entityManager->remove($employee);
+        $entityManager->flush();
+        return $this->json(
+            null, Response::HTTP_NO_CONTENT
+        );
     }
 }
 
