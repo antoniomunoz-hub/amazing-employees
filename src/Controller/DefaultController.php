@@ -94,10 +94,39 @@ class DefaultController extends AbstractController
      *      }
      * )
      */
-    public function indexJson(EmployeeRepository $employeeRepository): JsonResponse {
-        $people= $employeeRepository->findAll();
+    public function indexJson(Request $request, EmployeeRepository $employeeRepository): JsonResponse {
+        $result = $request->query->has('id') ?
+        $employeeRepository->find($request->query->get('id')) :
+        $employeeRepository->findAll();
+
+        $data = [];
+
+        foreach ($result as $employee) {
+            $projects = [];
+
+            foreach($employee->getProjects() as $project ){
+                array_push($projects, [
+                    'id' => $project->getId(),
+                    'name' => $project->getName()
+                ]);
+            }
+
+            array_push($data, [ 
+                'name' => $employee->getName(),
+                'email'=> $employee->getEmail(),
+                'City'=> $employee->getCity(),
+                'project' => $projects, 
+                'department'=> [
+                    'id'=> $employee->getDepartment()->getId(),
+                    'name'=> $employee->getDepartment()->getName(),
+                ],
+
+            ]);
+        }
+
         
-        return $this->json($people);
+
+        return $this->json($data);
     }
     /**
      * @Route("/adios", name="default_adios")
@@ -146,26 +175,26 @@ class DefaultController extends AbstractController
         //Return $this->redirectRoute('default_show', ['id'=>1]);    
     }
 
-        /**
-     * @Route(
-     *      "/default.{_format}",
-     *      name="default_index_json",
-     *      requirements = {
-     *          "_format": "json"
-     *      }
-     * )
-     * 
-     * El comando:
-     * symfony console router:match /default.json
-     * buscará la acción coincidente con la ruta indicada
-     * y mostrará la información asociada.
-     */
+    //     /**
+    //  * @Route(
+    //  *      "/default.{_format}",
+    //  *      name="default_index_json",
+    //  *      requirements = {
+    //  *          "_format": "json"
+    //  *      }
+    //  * )
+    //  * 
+    //  * El comando:
+    //  * symfony console router:match /default.json
+    //  * buscará la acción coincidente con la ruta indicada
+    //  * y mostrará la información asociada.
+    //  */
     
-     public function indexJsonRequest(Request $request): JsonResponse {
-        $data = $request->query->has('id') ? self::PEOPLE[$request->query->get('id')] : self::PEOPLE;
+    //  public function indexJsonRequest(Request $request): JsonResponse {
+    //     $data = $request->query->has('id') ? self::PEOPLE[$request->query->get('id')] : self::PEOPLE;
 
-        return $this->json($data);
-    }
+    //     return $this->json($data);
+    // }
 
 }
 
