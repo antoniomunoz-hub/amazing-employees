@@ -99,30 +99,10 @@ class DefaultController extends AbstractController
         $employeeRepository->find($request->query->get('id')) :
         $employeeRepository->findAll();
 
-        $data = [];
-
-        foreach ($result as $employee) {
-            $projects = [];
-
-            foreach($employee->getProjects() as $project ){
-                array_push($projects, [
-                    'id' => $project->getId(),
-                    'name' => $project->getName()
-                ]);
-            }
-
-            array_push($data, [ 
-                'name' => $employee->getName(),
-                'email'=> $employee->getEmail(),
-                'City'=> $employee->getCity(),
-                'project' => $projects, 
-                'department'=> [
-                    'id'=> $employee->getDepartment()->getId(),
-                    'name'=> $employee->getDepartment()->getName(),
-                ],
-
-            ]);
-        }
+        $data= $this->normalizeEmployee($result);
+        
+        //Aqui me he quedado
+        
 
         
 
@@ -195,6 +175,29 @@ class DefaultController extends AbstractController
 
     //     return $this->json($data);
     // }
+
+        private function normalizeEmployee (Employee $employee): ?array {
+        $projects = [];
+
+        foreach($employee->getProjects() as $project) {
+            array_push($projects, [
+                'id' => $project->getId(),    
+                'name' => $project->getName(),    
+            ]);
+        }
+
+        return [
+            'name' => $employee->getName(),
+            'email' => $employee->getEmail(),
+            'city' => $employee->getCity(),
+            'department' => [
+                'id' => $employee->getDepartment()->getId(),
+                'name' => $employee->getDepartment()->getName(),
+            ],
+            'projects' => $projects
+        ];
+    }
+
 
 }
 
