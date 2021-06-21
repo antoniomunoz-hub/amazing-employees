@@ -12,7 +12,8 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
-
+use Symfony\Component\String\Slugger\SluggerInterface;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
 
 /**
  * @Route("/api/amazing-employees", name="api_employees_")
@@ -74,6 +75,7 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
     public function add(
         Request $request,
         EntityManagerInterface $entityManager, 
+        SluggerInterface $slug,
         ValidatorInterface $validator) : Response {
         $data = $request->request;
         
@@ -85,6 +87,26 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
         $employee->setAge($data->get('age'));
         $employee->setCity($data->get('City'));
         $employee->setPhone($data->get('phone'));
+
+        if($request->files->has('avatar')){
+            $avatarFile = $request->files->get('avatar');
+
+            $avatarOriginalFilename = pathinfo($avatarFile->getClientOriginalName(), PATHINFO_FILENAME);
+            
+            $safeFilename = $slug->slug($avatarOriginalFilename);
+            $avatarNewFilename = $safeFilename.'-'.uniqid().'-'.$avatarFile->guessExtension();
+            dump($avatarNewFilename);
+
+            try {
+                $avatarFile->move(
+                    $request->server->get('DOCUMENT_ROOT') . DIRECTORY_SEPARATOR . 'employee/avatar',
+                    $avatarNewFilename
+                );
+
+            } catch (FileException $e){
+                throw new \Exception($e->getMessage());
+            }
+        }
 
         $errors = $validator->validate($employee);
 
